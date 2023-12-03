@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Http\Request;
 use Recombee\RecommApi\Client;
 use Recombee\RecommApi\Requests as Reqs;
@@ -22,9 +23,52 @@ class HotelController extends Controller
         //
     }
 
+    function generateRandomNumberFromString($inputString)
+    {
+        $hashValue = crc32($inputString);
+        $randomNumber = abs($hashValue) % 1000;
+
+        return $randomNumber;
+    }
+
+    function generateInitialRecommandations()
+    {
+        // tb facuta
+    }
+
     public function store(Request $request)
     {
-        //
+        try {
+            $username = $request->username;
+            $password = $request->password;
+            $facilities = $request->facilities;
+            $cities = $request->cities;
+
+            $client = new Client("sac-project-hotels", 'GNtRIgEf3pBTIWnmNecftZZYzn6fjcUbbpIyy6NIIAPzZX2DWDA3RYBVv9cuFBEz', ['region' => 'eu-west']);
+            $userId = $this->generateRandomNumberFromString($username+$password);
+            try {
+                $addUserRequest = new Reqs\AddUser($userId);
+                $client->send(new Reqs\SetUserValues($userId, ['password' => $password,'username' => $username]));
+                $this->generateInitialRecommandations();
+                echo "User added successfully\n";
+            } catch (\Exception $e) {
+                return response()->json(['status' => false, 'message' => "Error adding user: " . $e->getMessage()]);
+            }
+
+        }catch (\Exception $exception) {
+            return response()->json(['status' => false, 'message' => $exception->getMessage()]);
+        }
+
+        return response()->json(['status' => true, 'message' => 'User saved successfully!']);
+    }
+
+    public function addUsersToRecombee() {
+        $client = new Client("sac-project-laptops", 'GNtRIgEf3pBTIWnmNecftZZYzn6fjcUbbpIyy6NIIAPzZX2DWDA3RYBVv9cuFBEz', ['region' => 'eu-west']);
+        for($i = 1; $i <= 200; $i++) {
+            $randomLaptop = mt_rand(1, 205);
+            $client->send(new AddUser($i));
+            $client->send(new AddDetailView($i, $randomLaptop));
+        }
     }
 
     public function show($id)
@@ -97,6 +141,9 @@ class HotelController extends Controller
                 $current_city = $csvData[$i][0];
             }
         }
+
+        $client->send(new Reqs\AddUserProperty('username', 'string'));
+        $client->send(new Reqs\AddUserProperty('password', 'string'));
 
         return "Data imported successfully";
     }

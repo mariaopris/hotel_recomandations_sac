@@ -19,3 +19,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('/import-data', [\App\Http\Controllers\HotelController::class, 'addDataToRecombee']);
+Route::get('/test', function () {
+    return 'testtt';
+});
+Route::apiResources(
+    [
+        'hotel' => App\Http\Controllers\HotelController::class,
+    ]
+);
