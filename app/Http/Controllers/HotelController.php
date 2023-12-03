@@ -62,15 +62,6 @@ class HotelController extends Controller
         return response()->json(['status' => true, 'message' => 'User saved successfully!']);
     }
 
-    public function addUsersToRecombee() {
-        $client = new Client("sac-project-laptops", 'GNtRIgEf3pBTIWnmNecftZZYzn6fjcUbbpIyy6NIIAPzZX2DWDA3RYBVv9cuFBEz', ['region' => 'eu-west']);
-        for($i = 1; $i <= 200; $i++) {
-            $randomLaptop = mt_rand(1, 205);
-            $client->send(new AddUser($i));
-            $client->send(new AddDetailView($i, $randomLaptop));
-        }
-    }
-
     public function show($id)
     {
         //
