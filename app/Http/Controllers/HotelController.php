@@ -36,6 +36,7 @@ class HotelController extends Controller
         // tb facuta
     }
 
+
     public function store(Request $request)
     {
         try {
@@ -44,22 +45,37 @@ class HotelController extends Controller
             $facilities = $request->facilities;
             $cities = $request->cities;
 
-            $client = new Client("sac-project-hotels", 'GNtRIgEf3pBTIWnmNecftZZYzn6fjcUbbpIyy6NIIAPzZX2DWDA3RYBVv9cuFBEz', ['region' => 'eu-west']);
-            $userId = $this->generateRandomNumberFromString($username+$password);
-            try {
-                $addUserRequest = new Reqs\AddUser($userId);
-                $client->send(new Reqs\SetUserValues($userId, ['password' => $password,'username' => $username]));
-                $this->generateInitialRecommandations();
-                echo "User added successfully\n";
-            } catch (\Exception $e) {
-                return response()->json(['status' => false, 'message' => "Error adding user: " . $e->getMessage()]);
-            }
+            $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
+            $userId = $this->generateRandomNumberFromString($username . $password);
 
-        }catch (\Exception $exception) {
-            return response()->json(['status' => false, 'message' => $exception->getMessage()]);
+            $userExists = $client->send(new Reqs\AddUser($userId));
+
+            $client->send(new Reqs\SetUserValues($userId, ['username' => $username]));
+            $client->send(new Reqs\SetUserValues($userId, ['password' => $password]));
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => "Error adding user: " . $e->getMessage()]);
         }
 
         return response()->json(['status' => true, 'message' => 'User saved successfully!']);
+    }
+
+    public function emptyUsersTable(){
+        try {
+            $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
+
+            // Retrieve all user IDs
+            $userIds = $client->send(new Reqs\ListUsers());
+
+            // Delete each user
+            foreach ($userIds as $userId) {
+                $client->send(new Reqs\DeleteUser($userId));
+            }
+
+            return response()->json(['status' => true, 'message' => 'Users table emptied successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => "Error emptying users table: " . $e->getMessage()]);
+        }
     }
 
     public function show($id)
@@ -104,7 +120,7 @@ class HotelController extends Controller
 
         for($i = 1; $i < count($csvData); $i++){
             var_dump('line: '. $i);
-            if($counter <= 60) {
+//            if($counter <= 60) {
                 $city = $csvData[$i][0];
                 $free_parking = $csvData[$i][1];
                 $free_wifi = $csvData[$i][2];
@@ -120,17 +136,23 @@ class HotelController extends Controller
                 $prices = $csvData[$i][8];
                 $rank = $csvData[$i][9];
                 $rating = $csvData[$i][10];
-                $avg_price = $csvData[$i][11];
+                $avg_price = $csvData[$i][11] * 0.011;
                 $counter++;
                 $index++;
-                $client->send(new Reqs\AddItem($index));
-                $client->send(new Reqs\SetItemValues($index, ['city' => $city, 'free_parking'=>$free_parking, 'free_wifi'=>$free_wifi, 'fully_refundable'=>$fully_refundable,
-                'name'=>$name, 'no_prepayment_needed'=>$no_prepayment_needed, 'num_reviews' =>$num_reviews, 'pool'=>$pool, 'prices'=>$prices, 'rank'=>$rank, 'rating'=>$rating, 'avg_price'=>$avg_price]));
-            }
-            if($current_city != $csvData[$i][0]) {
-                $counter = 0;
-                $current_city = $csvData[$i][0];
-            }
+
+                if($avg_price != '0'){
+                    $client->send(new Reqs\AddItem($index));
+                    $client->send(new Reqs\SetItemValues($index, ['city' => $city, 'free_parking'=>$free_parking, 'free_wifi'=>$free_wifi, 'fully_refundable'=>$fully_refundable,
+                        'name'=>$name, 'no_prepayment_needed'=>$no_prepayment_needed, 'num_reviews' =>$num_reviews, 'pool'=>$pool, 'prices'=>$prices, 'rank'=>$rank, 'rating'=>$rating, 'avg_price'=>$avg_price]));
+                }
+//                $client->send(new Reqs\AddItem($index));
+//                $client->send(new Reqs\SetItemValues($index, ['city' => $city, 'free_parking'=>$free_parking, 'free_wifi'=>$free_wifi, 'fully_refundable'=>$fully_refundable,
+//                'name'=>$name, 'no_prepayment_needed'=>$no_prepayment_needed, 'num_reviews' =>$num_reviews, 'pool'=>$pool, 'prices'=>$prices, 'rank'=>$rank, 'rating'=>$rating, 'avg_price'=>$avg_price]));
+//            }
+//            if($current_city != $csvData[$i][0]) {
+//                $counter = 0;
+//                $current_city = $csvData[$i][0];
+//            }
         }
 
         $client->send(new Reqs\AddUserProperty('username', 'string'));
@@ -138,4 +160,25 @@ class HotelController extends Controller
 
         return "Data imported successfully";
     }
+
+    public function emptyItemsTable()
+    {
+        try {
+            $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
+
+            // Retrieve all item IDs
+            $itemIds = $client->send(new Reqs\ListItems());
+
+            // Delete each item
+            foreach ($itemIds as $itemId) {
+                $client->send(new Reqs\DeleteItem($itemId));
+            }
+
+            return response()->json(['status' => true, 'message' => 'Items table emptied successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => "Error emptying items table: " . $e->getMessage()]);
+        }
+    }
 }
+
+

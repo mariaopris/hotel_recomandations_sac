@@ -19,6 +19,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('/import-data', [\App\Http\Controllers\HotelController::class, 'addDataToRecombee']);
+Route::get('/store', [\App\Http\Controllers\HotelController::class, 'store']);
+Route::get('/empty_users', [\App\Http\Controllers\HotelController::class, 'emptyUsersTable']);
+Route::get('/empty_items', [\App\Http\Controllers\HotelController::class, 'emptyItemsTable']);
 Route::get('/test', function () {
     return 'testtt';
 });
