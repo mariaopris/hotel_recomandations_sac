@@ -8,6 +8,10 @@ use Illuminate\Http\Request;
 use Recombee\RecommApi\Client;
 use Recombee\RecommApi\Requests as Reqs;
 use Recombee\RecommApi\Exceptions as Ex;
+use Recombee\RecommApi\Requests\AddDetailView;
+use Recombee\RecommApi\Requests\ListItems;
+use Recombee\RecommApi\Requests\ListUserDetailViews;
+use Recombee\RecommApi\Requests\RecommendItemsToItem;
 use function Webmozart\Assert\Tests\StaticAnalysis\null;
 
 class HotelController extends Controller
@@ -44,14 +48,46 @@ class HotelController extends Controller
             $password = $request->password;
             $facilities = $request->facilities;
             $cities = $request->cities;
+            $price = $request->price;
 
+            $facilities_text = '';
+            if(count($facilities) > 0){
+                $facilities_text = '(';
+            }
+            $check_facility = '';
+
+            foreach ($facilities as $key => $facility){
+                $check_facility = 'and';
+                if($key == count($facilities) - 1){
+                    $facilities_text = $facilities_text . "'". $facility ."' == true)";
+                } else {
+                    $facilities_text = $facilities_text . "'". $facility ."' == true or ";
+                }
+            }
             $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
-            $userId = $this->generateRandomNumberFromString($username . $password);
+            $all_results = [];
+            foreach ($cities as $key => $city){
+                $count = round(15/ count($cities));
+                $results = $client->send(new ListItems([
+                    'filter' => $facilities_text. $check_facility . "'avg_price' < " . $price . " and " . '"'. $city . '"' . " in 'city' and 'rating' >= 3.5",
+                    'count' => $count,
+                    'returnProperties' => true,
+                ]));
+                foreach ($results as $result){
+                    $all_results[] = $result;
+                }
+            }
 
+            $userId = $this->generateRandomNumberFromString($username . $password);
             $userExists = $client->send(new Reqs\AddUser($userId));
 
             $client->send(new Reqs\SetUserValues($userId, ['username' => $username]));
             $client->send(new Reqs\SetUserValues($userId, ['password' => $password]));
+
+            foreach ($all_results as $result) {
+                $client->send(new AddDetailView($userId, $result['itemId']));
+            }
+
 
         } catch (\Exception $e) {
             return response()->json(['status' => false, 'message' => "Error adding user: " . $e->getMessage()]);
@@ -116,7 +152,7 @@ class HotelController extends Controller
         $client->send(new Reqs\AddItemProperty('prices', 'string'));
         $client->send(new Reqs\AddItemProperty('rank', 'double'));
         $client->send(new Reqs\AddItemProperty('rating', 'double'));
-        $client->send(new Reqs\AddItemProperty('avg_price', 'double'));
+        $client->send(new Reqs\AddItemProperty('avg_price', 'int'));
 
         for($i = 1; $i < count($csvData); $i++){
             var_dump('line: '. $i);
@@ -136,7 +172,7 @@ class HotelController extends Controller
                 $prices = $csvData[$i][8];
                 $rank = $csvData[$i][9];
                 $rating = $csvData[$i][10];
-                $avg_price = $csvData[$i][11] * 0.011;
+                $avg_price = round($csvData[$i][11] * 0.011);
                 $counter++;
                 $index++;
 
@@ -178,6 +214,28 @@ class HotelController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => false, 'message' => "Error emptying items table: " . $e->getMessage()]);
         }
+    }
+
+    public function getPopularHotels()
+    {
+        $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
+
+        $result = $client->send(new ListItems([
+                    'filter' => "'num_reviews' > 3000 and 'rating' > 4.5",
+                'count' => 10, 'returnProperties' => true,
+                ]));
+
+        return $result;
+    }
+
+    public function getRecommandations(Request $request)
+    {
+        $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
+        $hotels = $client->send(new ListUserDetailViews($request->user_id));
+        $item_id = $hotels[rand(0, count($hotels) - 1)]['itemId'];
+        $result = $client->send(new RecommendItemsToItem($item_id, $request->user_id, 5));
+
+        return $result;
     }
 }
 

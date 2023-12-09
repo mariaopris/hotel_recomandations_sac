@@ -25,6 +25,8 @@ Route::get('/empty_items', [\App\Http\Controllers\HotelController::class, 'empty
 Route::get('/test', function () {
     return 'testtt';
 });
+Route::get('/get-popular-hotels', [\App\Http\Controllers\HotelController::class, 'getPopularHotels']);
+Route::post('/get-recommandations', [\App\Http\Controllers\HotelController::class, 'getRecommandations']);
 Route::apiResources(
     [
         'hotel' => App\Http\Controllers\HotelController::class,
