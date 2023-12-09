@@ -2,7 +2,7 @@
 
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
-ini_set('max_execution_time', 180);
+ini_set('max_execution_time', 1200);
 define('LARAVEL_START', microtime(true));
 
 /*
