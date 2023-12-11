@@ -11,7 +11,9 @@ use Recombee\RecommApi\Exceptions as Ex;
 use Recombee\RecommApi\Requests\AddDetailView;
 use Recombee\RecommApi\Requests\ListItems;
 use Recombee\RecommApi\Requests\ListUserDetailViews;
+use Recombee\RecommApi\Requests\ListUsers;
 use Recombee\RecommApi\Requests\RecommendItemsToItem;
+use function Laravel\Prompts\password;
 use function Webmozart\Assert\Tests\StaticAnalysis\null;
 
 class HotelController extends Controller
@@ -69,7 +71,7 @@ class HotelController extends Controller
             foreach ($cities as $key => $city){
                 $count = round(15/ count($cities));
                 $results = $client->send(new ListItems([
-                    'filter' => $facilities_text. $check_facility . "'avg_price' < " . $price . " and " . '"'. $city . '"' . " in 'city' and 'rating' >= 3.5",
+                    'filter' => $facilities_text. $check_facility . "'avg_price' < " . $price . " and " . '"'. $city . '"' . " in 'city' and 'rating' >= 4",
                     'count' => $count,
                     'returnProperties' => true,
                 ]));
@@ -233,9 +235,26 @@ class HotelController extends Controller
         $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
         $hotels = $client->send(new ListUserDetailViews($request->user_id));
         $item_id = $hotels[rand(0, count($hotels) - 1)]['itemId'];
-        $result = $client->send(new RecommendItemsToItem($item_id, $request->user_id, 5));
+        $result = $client->send(new RecommendItemsToItem($item_id, $request->user_id, 5, ['returnProperties' => true]));
 
         return $result;
+    }
+
+    public function login(Request $request) {
+        $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
+
+        $user_name = $request->user_name;
+        $password = $request->password;
+
+        $users = $client->send(new ListUsers(['returnProperties' => true]));
+
+        foreach ($users as $user) {
+            if($user['username'] == $user_name && $user['password'] == $password) {
+                return response()->json(['status' => true, 'user' => $user]);
+            }
+        }
+
+        return response()->json(['status' => false, 'message' => 'Error']);
     }
 }
 
