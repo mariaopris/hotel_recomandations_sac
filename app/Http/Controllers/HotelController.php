@@ -95,7 +95,7 @@ class HotelController extends Controller
             return response()->json(['status' => false, 'message' => "Error adding user: " . $e->getMessage()]);
         }
 
-        return response()->json(['status' => true, 'message' => 'User saved successfully!']);
+        return response()->json(['status' => true, 'message' => 'User saved successfully!', 'user_id' => $userId]);
     }
 
     public function emptyUsersTable(){
@@ -203,11 +203,8 @@ class HotelController extends Controller
     {
         try {
             $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
-
-            // Retrieve all item IDs
             $itemIds = $client->send(new Reqs\ListItems());
 
-            // Delete each item
             foreach ($itemIds as $itemId) {
                 $client->send(new Reqs\DeleteItem($itemId));
             }
