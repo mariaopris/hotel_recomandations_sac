@@ -28,6 +28,7 @@ Route::get('/test', function () {
 Route::get('/get-popular-hotels', [\App\Http\Controllers\HotelController::class, 'getPopularHotels']);
 Route::get('/get-hotels-by-city', [\App\Http\Controllers\HotelController::class, 'getHotelsByCity']);
 Route::post('/get-recommandations', [\App\Http\Controllers\HotelController::class, 'getRecommandations']);
+Route::post('/set-view', [\App\Http\Controllers\HotelController::class, 'setHotelAsViewed']);
 Route::post('/login', [\App\Http\Controllers\HotelController::class, 'login']);
 Route::apiResources(
     [

@@ -263,6 +263,13 @@ class HotelController extends Controller
 
         return $results;
     }
+
+    public function setHotelAsViewed(Request $request) {
+        $user_id = $request->user_id;
+        $item_id = $request->item_id;
+        $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
+        $client->send(new AddDetailView($user_id, $item_id));
+    }
 }
 
 
