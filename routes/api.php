@@ -26,6 +26,7 @@ Route::get('/test', function () {
     return 'testtt';
 });
 Route::get('/get-popular-hotels', [\App\Http\Controllers\HotelController::class, 'getPopularHotels']);
+Route::get('/get-hotels-by-city', [\App\Http\Controllers\HotelController::class, 'getHotelsByCity']);
 Route::post('/get-recommandations', [\App\Http\Controllers\HotelController::class, 'getRecommandations']);
 Route::post('/login', [\App\Http\Controllers\HotelController::class, 'login']);
 Route::apiResources(

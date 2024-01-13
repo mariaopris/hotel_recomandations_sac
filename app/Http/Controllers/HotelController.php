@@ -37,12 +37,6 @@ class HotelController extends Controller
         return $randomNumber;
     }
 
-    function generateInitialRecommandations()
-    {
-        // tb facuta
-    }
-
-
     public function store(Request $request)
     {
         try {
@@ -232,8 +226,10 @@ class HotelController extends Controller
         $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
         $hotels = $client->send(new ListUserDetailViews($request->user_id));
         $item_id = $hotels[rand(0, count($hotels) - 1)]['itemId'];
-        $result = $client->send(new RecommendItemsToItem($item_id, $request->user_id, 5, ['returnProperties' => true]));
-
+        $result = $client->send(new RecommendItemsToItem($item_id, $request->user_id, 8, ['filter' => "'rating' > 3.5 and 'num_reviews' > 200", 'returnProperties' => true]));
+        $result_long_tail = $client->send(new RecommendItemsToItem($item_id, $request->user_id, 2, ['filter' => "'rating' > 3.5 and 'num_reviews' < 50", 'returnProperties' => true]));
+        $result['recomms'][] = $result_long_tail['recomms'][0];
+        $result['recomms'][] = $result_long_tail['recomms'][1];
         return $result;
     }
 
@@ -243,15 +239,29 @@ class HotelController extends Controller
         $user_name = $request->user_name;
         $password = $request->password;
 
-        $users = $client->send(new ListUsers(['returnProperties' => true]));
+        $user = $client->send(new ListUsers([
+            'filter' => '"' . $user_name .'" ' . "in 'username' and " . '"' .$password . '" ' . "in 'password'",
+            'returnProperties' => true,
+        ]));
 
-        foreach ($users as $user) {
-            if($user['username'] == $user_name && $user['password'] == $password) {
-                return response()->json(['status' => true, 'user' => $user]);
-            }
+        if(count($user) == 1)
+        {
+            return response()->json(['status' => true, 'user' => $user[0]]);
         }
 
         return response()->json(['status' => false, 'message' => 'Error']);
+    }
+
+    public function getHotelsByCity(Request $request) {
+
+        $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
+
+        $results = $client->send(new ListItems([
+            'filter' => '"' . $request->city .'" in ' . "'city'",
+            'returnProperties' => true,
+        ]));
+
+        return $results;
     }
 }
 
