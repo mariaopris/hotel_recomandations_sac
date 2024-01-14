@@ -27,8 +27,11 @@ Route::get('/test', function () {
 });
 Route::get('/get-popular-hotels', [\App\Http\Controllers\HotelController::class, 'getPopularHotels']);
 Route::get('/get-hotels-by-city', [\App\Http\Controllers\HotelController::class, 'getHotelsByCity']);
+Route::get('/get-hotel', [\App\Http\Controllers\HotelController::class, 'getHotel']);
 Route::post('/get-recommandations', [\App\Http\Controllers\HotelController::class, 'getRecommandations']);
+Route::post('/add-reservation', [\App\Http\Controllers\HotelController::class, 'addReservation']);
 Route::post('/set-view', [\App\Http\Controllers\HotelController::class, 'setHotelAsViewed']);
+Route::post('/add-review', [\App\Http\Controllers\HotelController::class, 'addReview']);
 Route::post('/login', [\App\Http\Controllers\HotelController::class, 'login']);
 Route::apiResources(
     [
