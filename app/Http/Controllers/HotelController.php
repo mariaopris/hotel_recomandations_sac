@@ -9,6 +9,9 @@ use Recombee\RecommApi\Client;
 use Recombee\RecommApi\Requests as Reqs;
 use Recombee\RecommApi\Exceptions as Ex;
 use Recombee\RecommApi\Requests\AddDetailView;
+use Recombee\RecommApi\Requests\AddPurchase;
+use Recombee\RecommApi\Requests\AddRating;
+use Recombee\RecommApi\Requests\GetItemValues;
 use Recombee\RecommApi\Requests\ListItems;
 use Recombee\RecommApi\Requests\ListUserDetailViews;
 use Recombee\RecommApi\Requests\ListUsers;
@@ -269,6 +272,35 @@ class HotelController extends Controller
         $item_id = $request->item_id;
         $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
         $client->send(new AddDetailView($user_id, $item_id));
+    }
+
+    public function getHotel(Request $request) {
+        $item_id = $request->item_id;
+        $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
+        $result = $client->send(new GetItemValues($item_id));
+
+        return response()->json(['status' => true, 'hotel' => $result]);
+
+    }
+    public function addReservation(Request $request) {
+        $item_id = $request->item_id;
+        $user_id = $request->user_id;
+        $price = $request->price;
+        $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
+        $client->send(new AddPurchase($user_id, $item_id, ['price' => $price]));
+
+        return response()->json(['status' => true, 'message' => 'Reservation added successfully!']);
+    }
+
+    public function addReview(Request $request) {
+        $client = new Client("sac-project-hotels", 'A8pJ3KAxYdMpqDre5562e7GUREZsl9lFhCWHlQBXNvyQi89uHTku9BA8nVVJ66js', ['region' => 'eu-west']);
+        $user_id = $request->user_id;
+        $item_id = $request->item_id;
+        $rating = ($request->rating - 3) / 2;
+        $client->send(new AddRating($user_id, $item_id, $rating));
+
+        return response()->json(['status' => true, 'message' => 'Review added successfully!']);
+
     }
 }
 
